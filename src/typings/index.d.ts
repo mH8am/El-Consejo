@@ -25,6 +25,7 @@ export interface TrackedPlayer {
 export interface RiotRankedEntry {
   summonerId: string;
   summonerName: string;
+  puuid?: string;
   leaguePoints: number;
   rank: string;
   wins: number;
@@ -40,6 +41,7 @@ export interface RiotRankedEntry {
 
 export interface LadderEntry extends RiotRankedEntry {
   tier: string;
+  displayName: string;
 }
 
 export interface XPEntry {
