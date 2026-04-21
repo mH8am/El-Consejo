@@ -1,6 +1,6 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 import { getFullProfile } from '../../../services/riotApi';
-import { errorEmbed } from '../../../utils/embeds';
+import { errorEmbed, tierColor, tierEmoji, rankLabel, winRate } from '../../../utils/embeds';
 import { addTrackedPlayer, getTrackedPlayers } from '../../../services/lpTracker';
 
 export const cooldown = 10;
@@ -27,28 +27,53 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (!profile) {
     await interaction.editReply({
-      embeds: [errorEmbed(`Could not find account **${name}**. Make sure the Riot ID is correct.`)],
+      embeds: [errorEmbed(`Could not find account **${name}**.\nDouble-check the Riot ID and region.`)],
     });
     return;
   }
 
   const isUnranked = profile.tier === 'UNRANKED';
-  const winRate = profile.wins + profile.losses > 0
-    ? ((profile.wins / (profile.wins + profile.losses)) * 100).toFixed(1)
-    : '0.0';
+  const wr = winRate(profile.wins, profile.losses);
+  const totalGames = profile.wins + profile.losses;
+  const region = (process.env.REGION ?? 'na1').toUpperCase();
 
   const embed = new EmbedBuilder()
-    .setColor(isUnranked ? 0x99aab5 : 0x5865f2)
-    .setTitle(`🎮 ${profile.summonerName}`)
+    .setColor(tierColor(profile.tier))
+    .setAuthor({ name: region, iconURL: 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-league-of-legends/global/default/assets/images/ranked-mini-crests/silver.png' })
+    .setTitle(`${tierEmoji(profile.tier)}  ${profile.summonerName}`)
     .addFields(
-      { name: '🏆 Rank', value: isUnranked ? 'Unranked' : `${profile.tier} ${profile.rank}`, inline: true },
-      { name: '📊 LP', value: isUnranked ? '—' : `${profile.lp} LP`, inline: true },
-      { name: '📈 Win Rate', value: isUnranked ? '—' : `${winRate}%`, inline: true },
-      { name: '✅ Wins', value: isUnranked ? '—' : `${profile.wins}`, inline: true },
-      { name: '❌ Losses', value: isUnranked ? '—' : `${profile.losses}`, inline: true },
-      { name: '⚡ Level', value: `${profile.summonerLevel}`, inline: true }
+      {
+        name: 'Rank',
+        value: isUnranked ? '`Unranked`' : `\`${rankLabel(profile.tier, profile.rank)}\``,
+        inline: true,
+      },
+      {
+        name: 'LP',
+        value: isUnranked ? '`—`' : `\`${profile.lp} LP\``,
+        inline: true,
+      },
+      {
+        name: 'Summoner Level',
+        value: `\`${profile.summonerLevel}\``,
+        inline: true,
+      },
+      {
+        name: 'Win Rate',
+        value: isUnranked ? '`—`' : `\`${wr}\``,
+        inline: true,
+      },
+      {
+        name: 'Wins',
+        value: isUnranked ? '`—`' : `\`${profile.wins}W\``,
+        inline: true,
+      },
+      {
+        name: 'Losses',
+        value: isUnranked ? '`—`' : `\`${profile.losses}L\``,
+        inline: true,
+      }
     )
-    .setFooter({ text: `Region: ${process.env.REGION ?? 'na1'}` })
+    .setFooter({ text: `${totalGames} ranked game${totalGames !== 1 ? 's' : ''} · ${region}` })
     .setTimestamp();
 
   const alreadyTracked = getTrackedPlayers().some(
@@ -57,7 +82,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   const trackButton = new ButtonBuilder()
     .setCustomId(`track_${profile.summonerName}`)
-    .setLabel(alreadyTracked ? '✅ Already Tracking' : '📡 Track Player')
+    .setLabel(alreadyTracked ? 'Already Tracking' : 'Track Player')
+    .setEmoji(alreadyTracked ? '✅' : '📡')
     .setStyle(alreadyTracked ? ButtonStyle.Secondary : ButtonStyle.Primary)
     .setDisabled(alreadyTracked);
 

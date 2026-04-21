@@ -1,5 +1,5 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import { successEmbed, errorEmbed } from '../../../utils/embeds';
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { errorEmbed, formatMinutes } from '../../../utils/embeds';
 
 export const data = new SlashCommandBuilder()
   .setName('remind')
@@ -15,23 +15,46 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const minutes = interaction.options.getInteger('minutes', true);
   const message = interaction.options.getString('message', true);
 
+  if (message.length > 500) {
+    await interaction.reply({ embeds: [errorEmbed('Reminder message must be 500 characters or fewer.')], ephemeral: true });
+    return;
+  }
+
+  const firesAt = Math.floor((Date.now() + minutes * 60_000) / 1000);
+  const humanTime = formatMinutes(minutes);
+
   await interaction.reply({
-    embeds: [successEmbed('⏰ Reminder Set', `I will remind you about: **${message}** in **${minutes} minute(s)**.`)],
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle('⏰ Reminder Set')
+        .setDescription(`I'll remind you in **${humanTime}**.\n\n> ${message}`)
+        .addFields({ name: 'Fires at', value: `<t:${firesAt}:t> · <t:${firesAt}:R>`, inline: true })
+        .setTimestamp()
+    ],
     ephemeral: true,
   });
 
   setTimeout(async () => {
+    const dmEmbed = new EmbedBuilder()
+      .setColor(0xffd700)
+      .setTitle('⏰ Reminder!')
+      .setDescription(`> ${message}`)
+      .setFooter({ text: 'Set via /remind' })
+      .setTimestamp();
+
     try {
-      await interaction.user.send(`⏰ **Reminder!**\n${message}`);
+      await interaction.user.send({ embeds: [dmEmbed] });
     } catch {
       // DMs closed — try the channel
       try {
         await interaction.followUp({
-          content: `${interaction.user} ⏰ **Reminder:** ${message}`,
+          content: `${interaction.user}`,
+          embeds: [dmEmbed],
           ephemeral: true,
         });
       } catch {
-        // Ignore if the interaction token is expired
+        // Interaction token expired — silently ignore
       }
     }
   }, minutes * 60_000);

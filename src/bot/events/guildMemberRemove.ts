@@ -9,10 +9,17 @@ client.on('guildMemberRemove', async (member: GuildMember | PartialGuildMember) 
   const channel = member.guild.channels.cache.get(channelId) as TextChannel | undefined;
   if (!channel) return;
 
+  const joinedAt = member.joinedTimestamp
+    ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`
+    : 'Unknown';
+
   const embed = new EmbedBuilder()
     .setColor(0xed4245)
-    .setTitle('👋 Goodbye!')
-    .setDescription(`**${member.user?.tag ?? 'A member'}** has left the server.`)
+    .setAuthor({ name: member.guild.name, iconURL: member.guild.iconURL() ?? undefined })
+    .setTitle('👋 A member has left')
+    .setDescription(`**${member.user?.tag ?? 'A member'}** has left the server.\n${member.guild.memberCount} members remain.`)
+    .setThumbnail(member.user?.displayAvatarURL({ size: 128 }) ?? null)
+    .addFields({ name: '📅 Joined', value: joinedAt, inline: true })
     .setTimestamp();
 
   try {

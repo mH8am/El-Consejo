@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
 import { getChallengerLadder, getGrandmasterLadder } from '../../../services/riotApi';
-import { errorEmbed } from '../../../utils/embeds';
+import { errorEmbed, medal, winRate } from '../../../utils/embeds';
 
 export const cooldown = 15;
 
@@ -29,24 +29,34 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (sub === 'ladder') {
     await interaction.deferReply();
     const tier = interaction.options.getString('tier', true);
+    const isChallenger = tier === 'challenger';
 
-    const entries = tier === 'challenger' ? await getChallengerLadder() : await getGrandmasterLadder();
+    const entries = isChallenger ? await getChallengerLadder() : await getGrandmasterLadder();
 
     if (entries.length === 0) {
       await interaction.editReply({ embeds: [errorEmbed('Could not fetch ladder data. Check your Riot API key.')] });
       return;
     }
 
+    const region = (process.env.REGION ?? 'na1').toUpperCase();
+
     const description = entries
       .slice(0, 10)
-      .map((e, i) => `**${i + 1}.** ${e.summonerName} — ${e.leaguePoints} LP (${e.wins}W / ${e.losses}L)`)
-      .join('\n');
+      .map((e, i) => {
+        const wr = winRate(e.wins, e.losses);
+        const prefix = medal(i);
+        return `${prefix} **${e.summonerName}**\n┣ ${e.leaguePoints.toLocaleString()} LP\n┗ ${e.wins}W / ${e.losses}L · ${wr} WR`;
+      })
+      .join('\n\n');
+
+    const tierLabel = isChallenger ? 'Challenger 🏆' : 'Grandmaster 👑';
+    const color = isChallenger ? 0xf1c40f : 0xe74c3c;
 
     const embed = new EmbedBuilder()
-      .setColor(0xffd700)
-      .setTitle(`🏆 ${tier === 'challenger' ? 'Challenger' : 'Grandmaster'} Ladder — Top 10`)
+      .setColor(color)
+      .setTitle(`${tierLabel} Ladder — Top 10`)
       .setDescription(description)
-      .setFooter({ text: `Region: ${process.env.REGION ?? 'na1'}` })
+      .setFooter({ text: `Region: ${region}` })
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

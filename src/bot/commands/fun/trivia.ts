@@ -13,20 +13,24 @@ interface TriviaQuestion {
   question: string;
   correct: string;
   options: string[];
+  category: string;
 }
 
 const QUESTIONS: TriviaQuestion[] = [
   {
-    question: 'What was the first programming language?',
+    category: '💻 Technology',
+    question: 'What was the first high-level programming language?',
     correct: 'Fortran',
     options: ['COBOL', 'Fortran', 'Assembly', 'BASIC'],
   },
   {
+    category: '📐 Math',
     question: 'How many sides does a hexagon have?',
     correct: '6',
     options: ['5', '6', '7', '8'],
   },
   {
+    category: '🌐 Internet',
     question: 'What does HTTP stand for?',
     correct: 'HyperText Transfer Protocol',
     options: [
@@ -37,20 +41,40 @@ const QUESTIONS: TriviaQuestion[] = [
     ],
   },
   {
-    question: "What year was Discord officially launched?",
+    category: '💬 Discord',
+    question: 'What year was Discord officially launched?',
     correct: '2015',
     options: ['2013', '2014', '2015', '2016'],
   },
   {
+    category: '🌌 Science',
     question: 'Which planet is known as the Red Planet?',
     correct: 'Mars',
     options: ['Venus', 'Mars', 'Jupiter', 'Mercury'],
+  },
+  {
+    category: '🌐 Internet',
+    question: 'What does "WWW" stand for?',
+    correct: 'World Wide Web',
+    options: ['World Wide Web', 'Wide World Web', 'World Web Wide', 'Web World Wide'],
+  },
+  {
+    category: '💻 Technology',
+    question: 'How many bits are in a byte?',
+    correct: '8',
+    options: ['4', '8', '16', '32'],
+  },
+  {
+    category: '🌍 Geography',
+    question: 'What is the capital of Japan?',
+    correct: 'Tokyo',
+    options: ['Osaka', 'Tokyo', 'Kyoto', 'Hiroshima'],
   },
 ];
 
 export const data = new SlashCommandBuilder()
   .setName('trivia')
-  .setDescription('Answer a trivia question for XP');
+  .setDescription('Answer a trivia question and earn XP');
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
@@ -59,7 +83,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const buttons = shuffled.map((opt) =>
     new ButtonBuilder()
       .setCustomId(`trivia_${opt}`)
-      .setLabel(opt)
+      .setLabel(opt.length > 80 ? opt.slice(0, 77) + '...' : opt)
       .setStyle(ButtonStyle.Secondary)
   );
 
@@ -67,9 +91,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
-    .setTitle('🧠 Trivia Time!')
-    .setDescription(`**${q.question}**`)
-    .setFooter({ text: 'You have 30 seconds to answer!' });
+    .setAuthor({ name: q.category })
+    .setTitle('🧠 Trivia')
+    .setDescription(`## ${q.question}`)
+    .setFooter({ text: `30 seconds · Correct answer earns +${XP_CONFIG.triviaReward} XP` });
 
   await interaction.reply({ embeds: [embed], components: [row] });
 
@@ -84,16 +109,20 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       await awardXPToUser(btnInteraction.client, btnInteraction.user.id, btnInteraction.channelId, XP_CONFIG.triviaReward);
     }
 
-    await btnInteraction.reply({
-      content: correct
-        ? `✅ Correct! The answer was **${q.correct}**.`
-        : `❌ Wrong! The correct answer was **${q.correct}**.`,
-      ephemeral: true,
-    });
+    const resultEmbed = new EmbedBuilder()
+      .setColor(correct ? 0x57f287 : 0xed4245)
+      .setTitle(correct ? '✅ Correct!' : '❌ Wrong!')
+      .setDescription(
+        correct
+          ? `The answer was **${q.correct}**.\nYou earned **+${XP_CONFIG.triviaReward} XP**!`
+          : `The correct answer was **${q.correct}**.`
+      );
+
+    await btnInteraction.reply({ embeds: [resultEmbed], ephemeral: true });
 
     const updated = EmbedBuilder.from(embed)
       .setColor(correct ? 0x57f287 : 0xed4245)
-      .setFooter({ text: `Answered by ${btnInteraction.user.tag}` });
+      .setFooter({ text: `Answered by ${btnInteraction.user.tag}${correct ? ` · +${XP_CONFIG.triviaReward} XP awarded` : ''}` });
 
     await interaction.editReply({ embeds: [updated], components: [] });
   });
@@ -101,7 +130,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   collector.on('end', async (collected) => {
     if (collected.size === 0) {
       const expired = EmbedBuilder.from(embed)
-        .setColor(0xffa500)
+        .setColor(0x95a5a6)
         .setFooter({ text: `Time's up! The answer was: ${q.correct}` });
       await interaction.editReply({ embeds: [expired], components: [] });
     }
