@@ -43,6 +43,28 @@ function getRegionalCluster(): string {
   return 'sea';
 }
 
+// Resolve a display name (gameName#tagLine) from a PUUID via Account-v1
+async function getAccountByPuuid(puuid: string): Promise<string> {
+  const key = `account-name:${puuid}`;
+  try {
+    const account = await cached(key, 10 * 60_000, () =>
+      riotGet<{ gameName: string; tagLine: string }>(
+        `https://${getRegionalCluster()}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${encodeURIComponent(puuid)}`
+      )
+    );
+    return `${account.gameName}#${account.tagLine}`;
+  } catch {
+    return 'Unknown';
+  }
+}
+
+// Pick the best available display name for a league entry
+async function resolveDisplayName(e: RiotRankedEntry): Promise<string> {
+  if (e.summonerName) return e.summonerName;
+  if (e.puuid) return getAccountByPuuid(e.puuid);
+  return 'Unknown';
+}
+
 // Lookup by Riot ID (gameName#tagLine) using Account-v1 → PUUID → Summoner-v4 (for level)
 export async function getSummonerByRiotId(
   gameName: string,
@@ -88,8 +110,12 @@ export async function getChallengerLadder(): Promise<LadderEntry[]> {
       const data = await riotGet<{ entries: RiotRankedEntry[] }>(
         `${BASE_URL()}/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`
       );
-      const entries: LadderEntry[] = data.entries.map((e) => ({ ...e, tier: 'CHALLENGER' }));
-      return entries.sort((a, b) => b.leaguePoints - a.leaguePoints).slice(0, 10);
+      const top10 = data.entries
+        .sort((a, b) => b.leaguePoints - a.leaguePoints)
+        .slice(0, 10);
+      return Promise.all(
+        top10.map(async (e) => ({ ...e, tier: 'CHALLENGER', displayName: await resolveDisplayName(e) }))
+      );
     });
   } catch (err) {
     log('error', `getChallengerLadder failed: ${(err as Error).message}`);
@@ -103,8 +129,12 @@ export async function getGrandmasterLadder(): Promise<LadderEntry[]> {
       const data = await riotGet<{ entries: RiotRankedEntry[] }>(
         `${BASE_URL()}/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5`
       );
-      const entries: LadderEntry[] = data.entries.map((e) => ({ ...e, tier: 'GRANDMASTER' }));
-      return entries.sort((a, b) => b.leaguePoints - a.leaguePoints).slice(0, 10);
+      const top10 = data.entries
+        .sort((a, b) => b.leaguePoints - a.leaguePoints)
+        .slice(0, 10);
+      return Promise.all(
+        top10.map(async (e) => ({ ...e, tier: 'GRANDMASTER', displayName: await resolveDisplayName(e) }))
+      );
     });
   } catch (err) {
     log('error', `getGrandmasterLadder failed: ${(err as Error).message}`);
