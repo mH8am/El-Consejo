@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { getTrackedPlayers } from '../../../services/lpTracker';
 import { tierEmoji, rankLabel, winRate } from '../../../utils/embeds';
 
@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         'Use `/addplayer` or the **Track Player** button on any `/profile` to get started.'
       )
       .setTimestamp();
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return;
   }
 

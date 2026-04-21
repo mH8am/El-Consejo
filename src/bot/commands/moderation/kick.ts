@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { requirePermission } from '../../../utils/permissions';
 import { logModAction } from '../../../services/modLogger';
 import { successEmbed, errorEmbed } from '../../../utils/embeds';
@@ -16,12 +16,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
   if (!target || typeof target === 'string') {
-    await interaction.reply({ embeds: [errorEmbed('Could not find that member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Could not find that member.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (!('kickable' in target) || !target.kickable) {
-    await interaction.reply({ embeds: [errorEmbed('I cannot kick this member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('I cannot kick this member.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -37,6 +37,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embeds: [successEmbed('✅ Member Kicked', `**${target.user.tag}** has been kicked.\n**Reason:** ${reason}`)],
     });
   } catch {
-    await interaction.reply({ embeds: [errorEmbed('Failed to kick the member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Failed to kick the member.')], flags: MessageFlags.Ephemeral });
   }
 }

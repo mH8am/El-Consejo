@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { requirePermission } from '../../../utils/permissions';
 import { logModAction } from '../../../services/modLogger';
 import { successEmbed, errorEmbed } from '../../../utils/embeds';
@@ -26,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const member = interaction.guild?.members.cache.get(targetUser.id);
 
   if (member && !member.bannable) {
-    await interaction.reply({ embeds: [errorEmbed('I cannot ban this member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('I cannot ban this member.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -47,6 +47,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embeds: [successEmbed('✅ Member Banned', `**${targetUser.tag}** has been banned.\n**Reason:** ${reason}`)],
     });
   } catch {
-    await interaction.reply({ embeds: [errorEmbed('Failed to ban the member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Failed to ban the member.')], flags: MessageFlags.Ephemeral });
   }
 }

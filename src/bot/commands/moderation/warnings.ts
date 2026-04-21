@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { requirePermission } from '../../../utils/permissions';
 import { clearWarns, getWarns } from '../../../services/moderation';
 import { errorEmbed, infoEmbed } from '../../../utils/embeds';
@@ -21,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     clearWarns(interaction.guildId!, targetUser.id);
     await interaction.reply({
       embeds: [infoEmbed('Warnings Cleared', `All warnings for **${targetUser.tag}** have been cleared.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -31,7 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (warns.length === 0) {
     await interaction.reply({
       embeds: [infoEmbed('No Warnings', `**${targetUser.tag}** has no warnings on record.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -49,5 +49,5 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     .setThumbnail(targetUser.displayAvatarURL())
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { requirePermission } from '../../../utils/permissions';
 import { logModAction } from '../../../services/modLogger';
 import { addWarn } from '../../../services/moderation';
@@ -47,6 +47,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       ],
     });
   } catch {
-    await interaction.reply({ embeds: [errorEmbed('Failed to issue the warning.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Failed to issue the warning.')], flags: MessageFlags.Ephemeral });
   }
 }

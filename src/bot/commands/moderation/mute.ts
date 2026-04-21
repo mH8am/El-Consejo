@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { requirePermission } from '../../../utils/permissions';
 import { logModAction } from '../../../services/modLogger';
 import { successEmbed, errorEmbed } from '../../../utils/embeds';
@@ -21,12 +21,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   const member = interaction.guild?.members.cache.get(targetUser.id);
   if (!member) {
-    await interaction.reply({ embeds: [errorEmbed('Could not find that member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Could not find that member.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (!member.moderatable) {
-    await interaction.reply({ embeds: [errorEmbed('I cannot mute this member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('I cannot mute this member.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -49,6 +49,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       ],
     });
   } catch {
-    await interaction.reply({ embeds: [errorEmbed('Failed to mute the member.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Failed to mute the member.')], flags: MessageFlags.Ephemeral });
   }
 }

@@ -1,4 +1,4 @@
-import { Interaction } from 'discord.js';
+import { Interaction, MessageFlags } from 'discord.js';
 import { client } from '../client';
 import { log } from '../../utils/logger';
 import { errorEmbed, successEmbed } from '../../utils/embeds';
@@ -15,20 +15,20 @@ client.on('interactionCreate', async (interaction: Interaction) => {
       (p) => p.summonerName.toLowerCase() === summonerName.toLowerCase()
     );
     if (already) {
-      await interaction.reply({ embeds: [errorEmbed(`**${summonerName}** is already being tracked.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed(`**${summonerName}** is already being tracked.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 
     const profile = await getFullProfile(summonerName);
     if (!profile) {
-      await interaction.reply({ embeds: [errorEmbed(`Could not fetch data for **${summonerName}**.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed(`Could not fetch data for **${summonerName}**.`)], flags: MessageFlags.Ephemeral });
       return;
     }
 
     addTrackedPlayer(profile);
     await interaction.reply({
       embeds: [successEmbed('📡 Now Tracking', `**${profile.summonerName}** has been added to the LP tracker.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -49,7 +49,7 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 
   const command = client.commands.get(interaction.commandName);
   if (!command) {
-    await interaction.reply({ content: '❌ Unknown command.', ephemeral: true });
+    await interaction.reply({ content: '❌ Unknown command.', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -57,7 +57,7 @@ client.on('interactionCreate', async (interaction: Interaction) => {
   if (remaining > 0) {
     await interaction.reply({
       content: `⏳ Please wait **${remaining}s** before using \`/${interaction.commandName}\` again.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -68,9 +68,9 @@ client.on('interactionCreate', async (interaction: Interaction) => {
     log('error', `Error executing command ${interaction.commandName}: ${(err as Error).message}`);
     const embed = errorEmbed('Something went wrong while running this command.');
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ embeds: [embed], ephemeral: true });
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } else {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
   }
 });

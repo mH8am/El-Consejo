@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { getFullProfile } from '../../../services/riotApi';
 import { addTrackedPlayer, getTrackedPlayers } from '../../../services/lpTracker';
 import { successEmbed, errorEmbed } from '../../../utils/embeds';
@@ -11,7 +11,7 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const name = interaction.options.getString('name', true);
 
   if (!name.includes('#')) {
