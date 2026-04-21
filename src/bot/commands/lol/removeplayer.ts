@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { getTrackedPlayers, removeTrackedPlayer } from '../../../services/lpTracker';
@@ -34,13 +35,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (!removed) {
     await interaction.reply({
       embeds: [errorEmbed(`**${name}** is not currently being tracked.`)],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await interaction.reply({
     embeds: [successEmbed('Player Removed', `**${name}** has been removed from the LP tracker.`)],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

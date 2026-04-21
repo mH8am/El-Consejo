@@ -4,6 +4,7 @@ import {
   ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { awardXPToUser } from '../../../services/xpService';
@@ -118,7 +119,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           : `The correct answer was **${q.correct}**.`
       );
 
-    await btnInteraction.reply({ embeds: [resultEmbed], ephemeral: true });
+    await btnInteraction.reply({ embeds: [resultEmbed], flags: MessageFlags.Ephemeral });
 
     const updated = EmbedBuilder.from(embed)
       .setColor(correct ? 0x57f287 : 0xed4245)

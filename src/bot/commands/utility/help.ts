@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { client } from '../../client';
 import { errorEmbed } from '../../../utils/embeds';
 
@@ -38,7 +38,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (commandName) {
     const cmd = client.commands.get(commandName);
     if (!cmd) {
-      await interaction.reply({ embeds: [errorEmbed(`No command named \`${commandName}\` found.`)], ephemeral: true });
+      await interaction.reply({ embeds: [errorEmbed(`No command named \`${commandName}\` found.`)], flags: MessageFlags.Ephemeral });
       return;
     }
     const desc = (cmd.data as { description?: string }).description ?? 'No description.';
@@ -49,7 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .setDescription(desc)
       .addFields({ name: 'Cooldown', value: cooldown, inline: true })
       .setTimestamp();
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -80,5 +80,5 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     .addFields(fields)
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

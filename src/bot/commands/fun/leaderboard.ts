@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { getXPData } from '../../../services/xpService';
 import { getTrackedPlayers } from '../../../services/lpTracker';
 import { medal, tierEmoji, rankLabel, winRate } from '../../../utils/embeds';
@@ -30,7 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setTitle('🏅 XP Leaderboard')
         .setDescription('No XP data yet — start chatting to earn XP!')
         .setTimestamp();
-      await interaction.reply({ embeds: [empty], ephemeral: true });
+      await interaction.reply({ embeds: [empty], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -60,7 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setTitle('🏆 LoL Wins Leaderboard')
         .setDescription('No tracked LoL players yet.\nUse `/addplayer` to start tracking.')
         .setTimestamp();
-      await interaction.reply({ embeds: [empty], ephemeral: true });
+      await interaction.reply({ embeds: [empty], flags: MessageFlags.Ephemeral });
       return;
     }
 

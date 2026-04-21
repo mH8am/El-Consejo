@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { errorEmbed, formatMinutes } from '../../../utils/embeds';
 
 export const data = new SlashCommandBuilder()
@@ -16,7 +16,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const message = interaction.options.getString('message', true);
 
   if (message.length > 500) {
-    await interaction.reply({ embeds: [errorEmbed('Reminder message must be 500 characters or fewer.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('Reminder message must be 500 characters or fewer.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -32,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .addFields({ name: 'Fires at', value: `<t:${firesAt}:t> · <t:${firesAt}:R>`, inline: true })
         .setTimestamp()
     ],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 
   setTimeout(async () => {
@@ -51,7 +51,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         await interaction.followUp({
           content: `${interaction.user}`,
           embeds: [dmEmbed],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } catch {
         // Interaction token expired — silently ignore

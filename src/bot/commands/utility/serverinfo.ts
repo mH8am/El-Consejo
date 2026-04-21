@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { errorEmbed } from '../../../utils/embeds';
 
 const BOOST_LABEL = ['No Boost', 'Level 1', 'Level 2', 'Level 3'];
@@ -10,7 +10,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const guild = interaction.guild;
   if (!guild) {
-    await interaction.reply({ embeds: [errorEmbed('This command must be used in a server.')], ephemeral: true });
+    await interaction.reply({ embeds: [errorEmbed('This command must be used in a server.')], flags: MessageFlags.Ephemeral });
     return;
   }
 

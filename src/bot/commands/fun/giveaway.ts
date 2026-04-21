@@ -4,6 +4,7 @@ import {
   ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -60,7 +61,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
   const embed = buildGiveawayEmbed(prize, endsAt, winnersCount, 0);
-  const msg = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+  const { resource } = await interaction.reply({ embeds: [embed], components: [row], withResponse: true });
+  const msg = resource!.message!;
 
   const giveaway: GiveawayEntry = {
     messageId: msg.id,
@@ -89,7 +91,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             .setTitle('✅ You\'re in!')
             .setDescription(`You've entered the **${prize}** giveaway. Good luck!`)
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
       // Update live entry count
@@ -105,7 +107,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             .setTitle('⚠️ Already Entered')
             .setDescription(`You already have an entry in the **${prize}** giveaway.`)
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   });

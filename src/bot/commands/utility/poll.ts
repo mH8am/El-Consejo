@@ -5,6 +5,7 @@ import {
   ChatInputCommandInteraction,
   ComponentType,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { errorEmbed } from '../../../utils/embeds';
@@ -61,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (options.length < 2) {
     await interaction.reply({
       embeds: [errorEmbed('Please provide at least 2 comma-separated options.')],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
