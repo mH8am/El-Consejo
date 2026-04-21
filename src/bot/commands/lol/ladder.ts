@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .map((e, i) => {
         const wr = winRate(e.wins, e.losses);
         const prefix = medal(i);
-        return `${prefix} **${e.summonerName}**\n┣ ${e.leaguePoints.toLocaleString()} LP\n┗ ${e.wins}W / ${e.losses}L · ${wr} WR`;
+        return `${prefix} **${e.displayName}**\n┣ ${e.leaguePoints.toLocaleString()} LP\n┗ ${e.wins}W / ${e.losses}L · ${wr} WR`;
       })
       .join('\n\n');
 
