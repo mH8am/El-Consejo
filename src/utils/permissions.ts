@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, PermissionResolvable } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags, PermissionResolvable } from 'discord.js';
 
 export function hasPermission(
   interaction: ChatInputCommandInteraction,
@@ -16,7 +16,7 @@ export async function requirePermission(
   if (!hasPermission(interaction, permission)) {
     await interaction.reply({
       content: `❌ You need the **${permissionName}** permission to use this command.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
