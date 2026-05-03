@@ -16,14 +16,7 @@ client.on('messageCreate', async (message: Message) => {
 
   const { url, platform } = links[0];
 
-  // Instagram / TikTok / Twitter — rewrite to a proxy that Discord embeds natively
-  const proxyUrl = getProxyUrl(url, platform);
-  if (proxyUrl) {
-    await message.reply({ content: proxyUrl, allowedMentions: { repliedUser: false } });
-    return;
-  }
-
-  // Facebook — no reliable proxy; try download then metadata embed
+  // Try to download and upload as a file — the only way to get inline video playback in Discord
   const keepTyping = () => {
     if ('sendTyping' in message.channel) message.channel.sendTyping().catch(() => {});
   };
@@ -45,6 +38,14 @@ client.on('messageCreate', async (message: Message) => {
       }
     }
 
+    // Download failed — try a proxy URL (shows a link preview, not inline video)
+    const proxyUrl = getProxyUrl(url, platform);
+    if (proxyUrl) {
+      await message.reply({ content: proxyUrl, allowedMentions: { repliedUser: false } });
+      return;
+    }
+
+    // No proxy available (Facebook) — try metadata embed
     const embed = await buildPreviewEmbed(url, platform);
     if (embed) {
       await message.reply({ embeds: [embed], allowedMentions: { repliedUser: false } });
