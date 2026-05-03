@@ -39,7 +39,7 @@ FROM base
 
 # Install ffmpeg (audio/video muxing) and yt-dlp (video extraction)
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y ffmpeg curl && \
+    apt-get install --no-install-recommends -y ffmpeg curl ca-certificates && \
     curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
          -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp && \
