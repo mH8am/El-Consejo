@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { log } from '../utils/logger';
 
 const execFileAsync = promisify(execFile);
 
@@ -39,7 +40,9 @@ export async function downloadVideo(url: string): Promise<string | null> {
     }
 
     return tmpPath;
-  } catch {
+  } catch (err: any) {
+    const reason = err?.stderr?.trim() || err?.message || 'unknown error';
+    log('warn', `yt-dlp failed for ${url}: ${reason}`);
     try { fs.unlinkSync(tmpPath); } catch { /* already gone */ }
     return null;
   }
