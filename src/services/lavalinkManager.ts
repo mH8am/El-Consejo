@@ -102,4 +102,12 @@ export function initLavalinkManager(client: CustomClient): void {
       embeds: [errorEmbed(`Failed to play **${title}**: ${msg}`)],
     });
   });
+
+  lavalink.on('trackStuck', (player, track) => {
+    const title = (track as Track | null)?.info.title ?? 'Unknown';
+    log('warn', `Track stuck [${title}]`);
+    sendToChannel(client, player.textChannelId, {
+      embeds: [errorEmbed(`Track got stuck and was skipped: **${title}**`)],
+    });
+  });
 }
