@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 *.js.map
+
+
+// VS Code settings
+.vscode/
