@@ -37,10 +37,10 @@ RUN npm prune --omit=dev
 # Final stage for app image
 FROM base
 
-# Install ffmpeg (audio/video muxing) and yt-dlp (video extraction)
+# Install ffmpeg and yt-dlp standalone binary (no Python required)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y ffmpeg curl ca-certificates && \
-    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
          -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp && \
     rm -rf /var/lib/apt/lists/*
