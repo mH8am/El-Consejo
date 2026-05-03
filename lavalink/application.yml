@@ -6,7 +6,7 @@ lavalink:
   plugins:
     - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.3.0"
       repository: "https://maven.topi.wtf/releases"
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.11.2"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.1"
       repository: "https://maven.lavalink.dev/releases"
   server:
     password: "${LAVALINK_PASSWORD:youshallnotpass}"
@@ -49,6 +49,7 @@ logging:
   level:
     root: INFO
     lavalink: INFO
+    "dev.lavalink.youtube": WARN
 
 plugins:
   lavasrc:
@@ -77,6 +78,4 @@ plugins:
     allowDirectPlaylistIds: true
     clients:
       - MUSIC
-      - WEB
-      - ANDROID
       - TVHTML5EMBEDDED
