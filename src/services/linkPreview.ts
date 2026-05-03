@@ -133,19 +133,40 @@ async function fetchGenericOG(url: string): Promise<OGData | null> {
     },
   });
 
+  // 4xx means we received an error/login page — don't parse it
+  if (res.status >= 400) return null;
+
   const html: string = typeof res.data === 'string' ? res.data : '';
   const og = parseOGFromHtml(html);
   if (!og.title && !og.image) return null;
   return og;
 }
 
+// Derive content type label from Facebook URL path without making any requests
+function facebookContentLabel(url: string): string {
+  try {
+    const { pathname } = new URL(url);
+    if (/\/reel\/|\/share\/r\//.test(pathname))   return 'Facebook Reel';
+    if (/\/watch|\/videos\//.test(pathname))       return 'Facebook Video';
+    if (/\/share\/p\//.test(pathname))             return 'Facebook Post';
+    if (/\/photo\/|\/photos\//.test(pathname))     return 'Facebook Photo';
+  } catch { /* fall through */ }
+  return 'Facebook';
+}
+
 // ── Main fetch dispatcher ─────────────────────────────────────────────────────
 
 async function fetchPreviewData(url: string, platform: string): Promise<OGData | null> {
   switch (platform) {
-    case 'Facebook':
-      // oEmbed first (works for video URLs), fall back to HTML scrape
-      return await fetchFacebookOEmbed(url).catch(() => fetchGenericOG(url).catch(() => null));
+    case 'Facebook': {
+      // Try oEmbed first, then HTML scrape — both require the content to be
+      // publicly accessible server-side (reels/share links are auth-walled by
+      // Facebook, so we fall back to a minimal URL-derived embed)
+      const fetched = await fetchFacebookOEmbed(url)
+        .catch(() => fetchGenericOG(url).catch(() => null));
+      if (fetched) return fetched;
+      return { title: facebookContentLabel(url), siteName: 'Facebook' };
+    }
 
     case 'Twitter':
       return await fetchTwitter(url).catch(() => null);
@@ -154,6 +175,7 @@ async function fetchPreviewData(url: string, platform: string): Promise<OGData |
       return await fetchGenericOG(url).catch(() => null);
   }
 }
+
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
