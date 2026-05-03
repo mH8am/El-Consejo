@@ -32,6 +32,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const query = interaction.options.getString('query', true);
   await interaction.deferReply();
 
+  const hasNode = [...lavalink.nodeManager.nodes.values()].some(n => n.connected);
+  if (!hasNode) {
+    await interaction.editReply({ embeds: [errorEmbed('Music service is temporarily unavailable. The audio server is not connected.')] });
+    return;
+  }
+
   try {
     const player = lavalink.createPlayer({
       guildId: interaction.guildId!,
