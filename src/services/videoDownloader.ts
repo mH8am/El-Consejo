@@ -41,7 +41,7 @@ export async function downloadVideo(url: string): Promise<string | null> {
       '--quiet',
       '-f', 'best[ext=mp4]/best',
       '--max-filesize', '8m',
-      '--max-duration', '300',      // skip videos over 5 min — no separate info call needed
+      '--match-filter', 'duration <= 300',
       ...cookiesArgs,
       '-o', tmpPath,
       url,

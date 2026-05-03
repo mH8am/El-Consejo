@@ -179,6 +179,17 @@ async function fetchPreviewData(url: string, platform: string): Promise<OGData |
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+const PROXY_HOSTS: Partial<Record<string, (url: string) => string>> = {
+  Instagram: (url) => url.replace(/(?:www\.)?instagram\.com/, 'ddinstagram.com'),
+  TikTok:    (url) => url.replace(/(?:www\.|vm\.)?tiktok\.com/, 'vxtiktok.com'),
+  Twitter:   (url) => url.replace(/(?:www\.)?(?:twitter|x)\.com/, 'fxtwitter.com'),
+};
+
+/** Returns a third-party proxy URL that Discord can embed natively, or null for unsupported platforms. */
+export function getProxyUrl(url: string, platform: string): string | null {
+  return PROXY_HOSTS[platform]?.(url) ?? null;
+}
+
 export function extractSupportedUrls(content: string): Array<{ url: string; platform: string }> {
   const raw = content.match(URL_REGEX) ?? [];
   const seen = new Set<string>();
