@@ -3,6 +3,28 @@ import { Track } from 'lavalink-client';
 import { lavalink, formatDuration } from '../../../services/lavalinkManager';
 import { errorEmbed, successEmbed, infoEmbed } from '../../../utils/embeds';
 
+function sanitizeQuery(query: string): string {
+  try {
+    const url = new URL(query);
+    if (url.hostname.includes('youtube.com') && url.pathname === '/watch') {
+      const videoId = url.searchParams.get('v');
+      if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+  } catch {
+    // not a URL, treat as a search term
+  }
+  return query;
+}
+
+function isSpotifyUrl(query: string): boolean {
+  try {
+    const url = new URL(query);
+    return url.hostname === 'open.spotify.com';
+  } catch {
+    return false;
+  }
+}
+
 export const data = new SlashCommandBuilder()
   .setName('play')
   .setDescription('Play a song from YouTube or SoundCloud')
@@ -29,7 +51,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     return;
   }
 
-  const query = interaction.options.getString('query', true);
+  const raw = interaction.options.getString('query', true);
+  const query = sanitizeQuery(raw);
   await interaction.deferReply();
 
   const hasNode = [...lavalink.nodeManager.nodes.values()].some(n => n.connected);
@@ -52,7 +75,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const result = await player.search({ query }, interaction.user);
 
     if (!result.tracks.length) {
-      await interaction.editReply({ embeds: [errorEmbed(`No results found for \`${query}\`.`)] });
+      const msg = isSpotifyUrl(raw)
+        ? 'Could not load that Spotify track. Make sure Spotify credentials are configured on the audio server.'
+        : `No results found for \`${query}\`.`;
+      await interaction.editReply({ embeds: [errorEmbed(msg)] });
       return;
     }
 
@@ -81,6 +107,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       await interaction.editReply({ embeds: [embed] });
     }
   } catch (err: any) {
-    await interaction.editReply({ embeds: [errorEmbed(err?.message ?? 'Could not play that track.')] });
+    const msg: string = err?.message ?? '';
+    const friendly = msg.includes('Unknown file format') || msg.includes('Something went wrong')
+      ? 'Could not load that track. Try searching by name instead of pasting a URL.'
+      : msg || 'Could not play that track.';
+    await interaction.editReply({ embeds: [errorEmbed(friendly)] });
   }
 }

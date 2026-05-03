@@ -33,6 +33,10 @@ function sendToChannel(client: CustomClient, channelId: string | null | undefine
 }
 
 export function initLavalinkManager(client: CustomClient): void {
+  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
+    log('warn', 'SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET is not set — Spotify playback will not work');
+  }
+
   lavalink = new LavalinkManager({
     nodes: [{
       host: process.env.LAVALINK_HOST ?? 'localhost',
@@ -76,6 +80,14 @@ export function initLavalinkManager(client: CustomClient): void {
 
   lavalink.nodeManager.on('disconnect', (node, reason) => {
     log('warn', `Lavalink node "${node.id}" disconnected: ${JSON.stringify(reason)}`);
+  });
+
+  lavalink.nodeManager.on('reconnecting', (node) => {
+    log('warn', `Lavalink node "${node.id}" reconnecting...`);
+  });
+
+  lavalink.nodeManager.on('resumed', (node) => {
+    log('info', `Lavalink node "${node.id}" resumed`);
   });
 
   lavalink.on('trackStart', (player, track) => {
