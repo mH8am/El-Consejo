@@ -125,6 +125,7 @@ async function fetchGenericOG(url: string): Promise<OGData | null> {
   const res = await axios.get(url, {
     timeout: 8_000,
     maxContentLength: 600_000,
+    validateStatus: (s) => s < 500, // treat 4xx as empty rather than thrown
     headers: {
       'User-Agent':      BROWSER_UA,
       'Accept-Language': 'en-US,en;q=0.9',
@@ -144,7 +145,7 @@ async function fetchPreviewData(url: string, platform: string): Promise<OGData |
   switch (platform) {
     case 'Facebook':
       // oEmbed first (works for video URLs), fall back to HTML scrape
-      return await fetchFacebookOEmbed(url).catch(() => fetchGenericOG(url));
+      return await fetchFacebookOEmbed(url).catch(() => fetchGenericOG(url).catch(() => null));
 
     case 'Twitter':
       return await fetchTwitter(url).catch(() => null);
@@ -177,17 +178,21 @@ export function extractSupportedUrls(content: string): Array<{ url: string; plat
 }
 
 export async function buildPreviewEmbed(url: string, platform: string): Promise<EmbedBuilder | null> {
-  const og = await fetchPreviewData(url, platform);
-  if (!og) return null;
+  try {
+    const og = await fetchPreviewData(url, platform);
+    if (!og) return null;
 
-  const embed = new EmbedBuilder()
-    .setColor(PLATFORM_COLORS[platform] ?? 0x5865f2)
-    .setURL(url)
-    .setFooter({ text: og.siteName ?? platform });
+    const embed = new EmbedBuilder()
+      .setColor(PLATFORM_COLORS[platform] ?? 0x5865f2)
+      .setURL(url)
+      .setFooter({ text: og.siteName ?? platform });
 
-  if (og.title)       embed.setTitle(og.title.slice(0, 256));
-  if (og.description) embed.setDescription(og.description.slice(0, 350));
-  if (og.image)       embed.setImage(og.image);
+    if (og.title)       embed.setTitle(og.title.slice(0, 256));
+    if (og.description) embed.setDescription(og.description.slice(0, 350));
+    if (og.image)       embed.setImage(og.image);
 
-  return embed;
+    return embed;
+  } catch {
+    return null;
+  }
 }
