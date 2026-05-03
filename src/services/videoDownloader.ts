@@ -23,8 +23,8 @@ export async function downloadVideo(url: string): Promise<string | null> {
       '--no-playlist',
       '--no-warnings',
       '--quiet',
-      // Prefer mp4 under 8MB; fall back to any best format within the limit
-      '-f', 'bestvideo[ext=mp4][filesize<8M]+bestaudio[ext=m4a]/best[ext=mp4][filesize<8M]/best[filesize<8M]',
+      // Prefer mp4; fall back to any available format — size capped by --max-filesize
+      '-f', 'best[ext=mp4]/best',
       '--merge-output-format', 'mp4',
       '--max-filesize', '8m',
       '-o', tmpPath,
