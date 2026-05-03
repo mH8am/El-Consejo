@@ -6,5 +6,7 @@ import { log } from '../../utils/logger';
 client.once('clientReady', async () => {
   log('info', `✅ Logged in as ${client.user?.tag}`);
   startLPTracker(client);
-  await lavalink.init({ ...client.user! });
+  await lavalink.init({ ...client.user! }).catch((err: Error) => {
+    log('error', `Lavalink init failed: ${err.message}`);
+  });
 });
