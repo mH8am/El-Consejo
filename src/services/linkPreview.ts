@@ -133,9 +133,6 @@ async function fetchGenericOG(url: string): Promise<OGData | null> {
     },
   });
 
-  // 4xx means we got an error/login page — don't parse it
-  if (res.status >= 400) return null;
-
   const html: string = typeof res.data === 'string' ? res.data : '';
   const og = parseOGFromHtml(html);
   if (!og.title && !og.image) return null;
