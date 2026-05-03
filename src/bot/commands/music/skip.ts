@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
-import { useQueue } from 'discord-player';
+import { lavalink } from '../../../services/lavalinkManager';
 import { errorEmbed, successEmbed } from '../../../utils/embeds';
 
 export const data = new SlashCommandBuilder()
@@ -9,15 +9,14 @@ export const data = new SlashCommandBuilder()
 export const category = 'Music';
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  const queue = useQueue(interaction.guild!);
+  const player = lavalink.getPlayer(interaction.guildId!);
 
-  if (!queue?.isPlaying()) {
+  if (!player?.playing) {
     await interaction.reply({ embeds: [errorEmbed('Nothing is playing right now.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
-  const track = queue.currentTrack!;
-  queue.node.skip();
-
-  await interaction.reply({ embeds: [successEmbed('Skipped', `Skipped **${track.title}**`)] });
+  const title = player.queue.current?.info.title ?? 'Unknown';
+  await player.skip();
+  await interaction.reply({ embeds: [successEmbed('Skipped', `Skipped **${title}**`)] });
 }

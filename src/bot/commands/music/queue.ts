@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from 'discord.js';
-import { useQueue } from 'discord-player';
+import { Track } from 'lavalink-client';
+import { lavalink, formatDuration } from '../../../services/lavalinkManager';
 import { errorEmbed, infoEmbed } from '../../../utils/embeds';
 
 export const data = new SlashCommandBuilder()
@@ -9,25 +10,24 @@ export const data = new SlashCommandBuilder()
 export const category = 'Music';
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-  const queue = useQueue(interaction.guild!);
+  const player = lavalink.getPlayer(interaction.guildId!);
 
-  if (!queue?.isPlaying()) {
+  if (!player?.queue.current) {
     await interaction.reply({ embeds: [errorEmbed('Nothing is playing right now.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
-  const current = queue.currentTrack!;
-  const upcoming = queue.tracks.data.slice(0, 10);
-  const total = queue.tracks.size;
+  const current = player.queue.current as Track;
+  const upcoming = (player.queue.tracks as Track[]).slice(0, 10);
+  const total = player.queue.tracks.length;
 
-  let description = `**Now Playing:**\n[${current.title}](${current.url}) • \`${current.duration}\`\n`;
+  let description = `**Now Playing:**\n[${current.info.title}](${current.info.uri}) • \`${formatDuration(current.info.duration ?? 0)}\`\n`;
 
   if (upcoming.length > 0) {
     description += `\n**Up Next:**\n`;
     description += upcoming
-      .map((t, i) => `\`${i + 1}.\` [${t.title}](${t.url}) • \`${t.duration}\``)
+      .map((t, i) => `\`${i + 1}.\` [${t.info.title}](${t.info.uri}) • \`${formatDuration(t.info.duration ?? 0)}\``)
       .join('\n');
-
     if (total > 10) description += `\n\n*...and ${total - 10} more tracks*`;
   } else {
     description += '\n*Queue is empty after this track.*';

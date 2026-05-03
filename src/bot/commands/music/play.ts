@@ -1,14 +1,14 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, MessageFlags } from 'discord.js';
-import { useMainPlayer, useQueue } from 'discord-player';
+import { Track } from 'lavalink-client';
+import { lavalink, formatDuration } from '../../../services/lavalinkManager';
 import { errorEmbed, successEmbed, infoEmbed } from '../../../utils/embeds';
-import { MusicMetadata } from '../../../services/musicPlayer';
 
 export const data = new SlashCommandBuilder()
   .setName('play')
-  .setDescription('Play a song from YouTube or Spotify')
+  .setDescription('Play a song from YouTube or SoundCloud')
   .addStringOption(opt =>
     opt.setName('query')
-      .setDescription('Song name, YouTube URL, or Spotify URL')
+      .setDescription('Song name or URL (YouTube, SoundCloud)')
       .setRequired(true)
   );
 
@@ -19,13 +19,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const voiceChannel = member.voice.channel;
 
   if (!voiceChannel) {
-    await interaction.reply({ embeds: [errorEmbed('You must be in a voice channel to play music.')], flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [errorEmbed('You must be in a voice channel.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
   const botMember = interaction.guild!.members.me!;
   if (!voiceChannel.permissionsFor(botMember)?.has(['Connect', 'Speak'])) {
-    await interaction.reply({ embeds: [errorEmbed('I need **Connect** and **Speak** permissions in that voice channel.')], flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [errorEmbed('I need **Connect** and **Speak** permissions in that channel.')], flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -33,28 +33,48 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   await interaction.deferReply();
 
   try {
-    const player = useMainPlayer();
-    const existingQueue = useQueue(interaction.guild!);
-    const wasPlaying = existingQueue?.isPlaying() ?? false;
-
-    const { track } = await player.play(voiceChannel, query, {
-      nodeOptions: {
-        metadata: { channel: interaction.channel } as MusicMetadata,
-        volume: 80,
-        leaveOnEmpty: true,
-        leaveOnEmptyCooldown: 300_000,
-        leaveOnEnd: true,
-        leaveOnEndCooldown: 300_000,
-      },
+    const player = lavalink.createPlayer({
+      guildId: interaction.guildId!,
+      voiceChannelId: voiceChannel.id,
+      textChannelId: interaction.channelId,
+      selfDeaf: true,
+      volume: 80,
     });
 
-    const embed = wasPlaying
-      ? successEmbed('Added to Queue', `[${track.title}](${track.url})\nby **${track.author}** • \`${track.duration}\``)
-      : infoEmbed('Now Playing', `[${track.title}](${track.url})\nby **${track.author}** • \`${track.duration}\``);
+    await player.connect();
 
-    await interaction.editReply({ embeds: [embed] });
+    const result = await player.search({ query }, interaction.user);
+
+    if (!result.tracks.length) {
+      await interaction.editReply({ embeds: [errorEmbed(`No results found for \`${query}\`.`)] });
+      return;
+    }
+
+    // search() returns resolved Track objects; cast away the union with UnresolvedTrack
+    const tracks = result.tracks as Track[];
+    const wasPlaying = player.playing || player.paused;
+
+    if (result.loadType === 'playlist') {
+      await player.queue.add(tracks);
+      if (!wasPlaying) await player.play({ paused: false });
+      const totalDur = tracks.reduce((acc, t) => acc + (t.info.duration ?? 0), 0);
+      await interaction.editReply({
+        embeds: [successEmbed(
+          'Playlist Added',
+          `Added **${tracks.length} tracks** from **${result.playlist?.name ?? 'playlist'}**\nTotal duration: \`${formatDuration(totalDur)}\``,
+        )],
+      });
+    } else {
+      const track = tracks[0];
+      await player.queue.add(track);
+      if (!wasPlaying) await player.play({ paused: false });
+      const dur = formatDuration(track.info.duration ?? 0);
+      const embed = wasPlaying
+        ? successEmbed('Added to Queue', `[${track.info.title}](${track.info.uri})\nby **${track.info.author}** • \`${dur}\``)
+        : infoEmbed('Now Playing', `[${track.info.title}](${track.info.uri})\nby **${track.info.author}** • \`${dur}\``);
+      await interaction.editReply({ embeds: [embed] });
+    }
   } catch (err: any) {
-    const msg = err?.message ?? 'Could not find or play that track.';
-    await interaction.editReply({ embeds: [errorEmbed(msg)] });
+    await interaction.editReply({ embeds: [errorEmbed(err?.message ?? 'Could not play that track.')] });
   }
 }
