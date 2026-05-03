@@ -125,13 +125,16 @@ async function fetchGenericOG(url: string): Promise<OGData | null> {
   const res = await axios.get(url, {
     timeout: 8_000,
     maxContentLength: 600_000,
-    validateStatus: (s) => s < 500, // treat 4xx as empty rather than thrown
+    validateStatus: (s) => s < 500,
     headers: {
       'User-Agent':      BROWSER_UA,
       'Accept-Language': 'en-US,en;q=0.9',
       'Accept':          'text/html,application/xhtml+xml',
     },
   });
+
+  // 4xx means we got an error/login page — don't parse it
+  if (res.status >= 400) return null;
 
   const html: string = typeof res.data === 'string' ? res.data : '';
   const og = parseOGFromHtml(html);
