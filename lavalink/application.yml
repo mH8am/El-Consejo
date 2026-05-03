@@ -60,7 +60,7 @@ plugins:
       deezer: false
       yandexmusic: false
       flowerytts: false
-      youtube: true
+      youtube: false
     spotify:
       clientId: "${SPOTIFY_CLIENT_ID}"
       clientSecret: "${SPOTIFY_CLIENT_SECRET}"
