@@ -122,4 +122,13 @@ export function initLavalinkManager(client: CustomClient): void {
       embeds: [errorEmbed(`Track got stuck and was skipped: **${title}**`)],
     });
   });
+
+  lavalink.on('trackEnd', (_player, track) => {
+    const title = (track as Track | null)?.info.title ?? 'Unknown';
+    log('info', `Track ended [${title}]`);
+  });
+
+  lavalink.on('playerDestroy', (player) => {
+    log('info', `Player destroyed for guild ${player.guildId}`);
+  });
 }
