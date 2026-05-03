@@ -4,15 +4,16 @@ import { EmbedBuilder } from 'discord.js';
 const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
 
 const SUPPORTED_HOSTS: Record<string, string> = {
-  'tiktok.com':    'TikTok',
-  'vm.tiktok.com': 'TikTok',
-  'twitter.com':   'Twitter',
-  'x.com':         'Twitter',
-  't.co':          'Twitter',
-  'instagram.com': 'Instagram',
-  'facebook.com':  'Facebook',
-  'fb.com':        'Facebook',
-  'fb.watch':      'Facebook',
+  'tiktok.com':     'TikTok',
+  'vm.tiktok.com':  'TikTok',
+  'twitter.com':    'Twitter',
+  'x.com':          'Twitter',
+  't.co':           'Twitter',
+  'instagram.com':  'Instagram',
+  'facebook.com':   'Facebook',
+  'web.facebook.com': 'Facebook',
+  'fb.com':         'Facebook',
+  'fb.watch':       'Facebook',
 };
 
 const PLATFORM_COLORS: Record<string, number> = {
@@ -33,9 +34,29 @@ interface OGData {
   siteName?:    string;
 }
 
+// Resolve share/short links to their canonical Facebook URL and
+// normalise web.facebook.com → www.facebook.com for oEmbed compatibility
+async function resolveFacebookUrl(url: string): Promise<string> {
+  try {
+    const u = new URL(url);
+    u.hostname = 'www.facebook.com';
+    const res = await axios.get(u.toString(), {
+      timeout: 8_000,
+      maxRedirects: 5,
+      headers: { 'User-Agent': BROWSER_UA },
+      validateStatus: () => true,
+    });
+    const final: string = (res.request as any)?.res?.responseUrl ?? (res.request as any)?.responseURL ?? u.toString();
+    return final;
+  } catch {
+    return url;
+  }
+}
+
 // Facebook exposes a public oEmbed endpoint for videos — no token needed
 async function fetchFacebookOEmbed(url: string): Promise<OGData | null> {
-  const endpoint = `https://www.facebook.com/plugins/video/oembed.json/?url=${encodeURIComponent(url)}`;
+  const canonical = await resolveFacebookUrl(url);
+  const endpoint = `https://www.facebook.com/plugins/video/oembed.json/?url=${encodeURIComponent(canonical)}`;
   const res = await axios.get(endpoint, {
     timeout: 8_000,
     headers: { 'User-Agent': BROWSER_UA },
