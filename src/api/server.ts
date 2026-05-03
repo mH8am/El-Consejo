@@ -17,6 +17,7 @@ app.use('/api/stats', statsRouter);
 app.use(errorHandler);
 
 export function startApi(): void {
-  const port = parseInt(process.env.API_PORT ?? '4000', 10);
+  // fly.io sets PORT=8080; fall back to API_PORT for local dev
+  const port = parseInt(process.env.PORT ?? process.env.API_PORT ?? '4000', 10);
   app.listen(port, () => log('info', `🌐 API running on :${port}`));
 }
