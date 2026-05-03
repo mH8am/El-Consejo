@@ -1,23 +1,22 @@
-# Deploy with: fly launch --no-deploy (from this directory), then fly deploy
-# The bot connects via fly.io private network: el-consejo-lavalink.internal:2333
-app = "el-consejo-lavalink"
-primary_region = "iad"
+# fly.toml app configuration file generated for el-consejo-lavalink on 2026-05-03T15:00:13+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'el-consejo-lavalink'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
-# Only exposed internally — no public HTTP service needed
 [[services]]
-  protocol = "tcp"
+  protocol = 'tcp'
   internal_port = 2333
 
   [[services.ports]]
     port = 2333
 
-[env]
-  # Set the password via: fly secrets set LAVALINK_PASSWORD=your_password
-
 [[vm]]
-  cpu_kind = "shared"
+  memory = '512mb'
   cpus = 1
   memory_mb = 512
